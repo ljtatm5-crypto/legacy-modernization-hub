@@ -339,9 +339,10 @@ def step_equiv_check(state: dict) -> dict:
     context = {"gate": verdict, "gate_results": report["gate_results"]}
 
     if verdict == "fail":
+        diff = report.get("diff") or {}
         log("WARN", "语义巡检命中 {} 条 · 双跑差分 {} 处不一致".format(
             len([f for f in report.get("findings", []) if f.get("risk") == "high"]),
-            report["diff"]["diff_count"]))
+            diff.get("diff_count", 0)))
         log("ERR", "行为等价性闸门阻断合入：编译与契约测试均未发现该静默破坏")
         write_text(ARTIFACTS / "equiv" / "interception-case.md", "\n".join([
             "# 生成缺陷被闸门拦下 · 真实执行案例",
@@ -350,7 +351,7 @@ def step_equiv_check(state: dict) -> dict:
             "- 缺陷：变换时漏掉 MAP-001 事务映射，`@TxRequired` 与 BEGIN/COMMIT 丢失",
             "- 编译：PASS（Java 8 存量 / JDK 17 目标四阶段全部通过）",
             "- 契约测试：PASS（4 条断言未发现事务边界丢失）",
-            "- 双跑差分：**{} 处不一致**，全部落在 SQL 轨迹".format(report["diff"]["diff_count"]),
+            "- 双跑差分：**{} 处不一致**".format(diff.get("diff_count", 0)),
             "- 语义巡检命中：{}".format(", ".join(
                 sorted({item["rule"] for item in report.get("findings", [])}))),
             "- 处置：工作流回边 → 自动出补丁 `patch/tx-annotation-fix.diff` → 重跑生成与闸门",
@@ -363,7 +364,7 @@ def step_equiv_check(state: dict) -> dict:
                       "artifacts/equiv/interception-case.md"]
         return _result(artifacts, status="fail",
                        detail="{} 处差分 / {} 条高风险".format(
-                           report["diff"]["diff_count"],
+                           diff.get("diff_count", 0),
                            len([f for f in report.get("findings", []) if f.get("risk") == "high"])),
                        context=context)
 
@@ -415,7 +416,7 @@ def step_gen_regression(state: dict) -> dict:
     write_text(test_file, "\n".join(lines) + "\n")
 
     cp = classpath(BUILD / "common", BUILD / "legacy", BUILD / "modern")
-    compiled = run(["javac", "--release", "17", "-Xlint:-options", "-cp", cp,
+    compiled = run(["javac", "--release", "17", "-encoding", "UTF-8", "-Xlint:-options", "-cp", cp,
                     "-d", str(BUILD / "test"), str(test_file)], cwd=PROJECT)
     executed = run(["java", "-cp", classpath(BUILD / "test", BUILD / "common",
                                              BUILD / "legacy", BUILD / "modern"),

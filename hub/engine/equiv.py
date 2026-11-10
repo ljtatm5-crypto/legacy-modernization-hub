@@ -20,7 +20,8 @@ GATE_KEYS = ["compile", "unit", "char", "dual", "ast"]
 
 
 def _javac(release: int, out: Path, sources, cp: str | None = None):
-    cmd = ["javac", "--release", str(release), "-Xlint:-options", "-d", str(out)]
+    cmd = ["javac", "--release", str(release), "-encoding", "UTF-8",
+           "-Xlint:-options", "-d", str(out)]
     if cp:
         cmd += ["-cp", cp]
     cmd += [str(source) for source in sources]

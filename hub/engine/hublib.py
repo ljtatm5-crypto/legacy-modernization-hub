@@ -4,8 +4,14 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
+
+# Windows 控制台默认使用 GBK，日志中的状态符号会让 CLI 直接中断。
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = ROOT / "sample-project"
