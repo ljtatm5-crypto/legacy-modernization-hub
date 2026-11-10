@@ -1,0 +1,11 @@
+{
+  "_说明": "复制本文件为 hub/model.json 后生效；密钥只放环境变量，不要写进这个文件。",
+  "base_url": "https://api.deepseek.com/v1",
+  "model": "deepseek-chat",
+  "api_key_env": "HUB_MODEL_API_KEY",
+  "temperature": 0.1,
+  "max_tokens": 2400,
+  "timeout": 60,
+  "price_in_per_1k": 0.00014,
+  "price_out_per_1k": 0.00028
+}

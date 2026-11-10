@@ -1,0 +1,29 @@
+module: OrderSettleService
+source_stack: Java 8 / Struts2 / private ORM / 存储过程
+target_stack: Spring Boot 3 / JDK 17
+mappings:
+  - id: MAP-001
+    legacy: 'XML <tx:advice propagation=REQUIRED>'
+    modern: '@TxRequired(propagation = REQUIRED)'
+    risk: high
+    inspect_rule: TX-001
+  - id: MAP-002
+    legacy: 'double amount / Math.round(...)'
+    modern: 'BigDecimal(18,2) + RoundingMode.HALF_UP'
+    risk: high
+    inspect_rule: PREC-003
+  - id: MAP-003
+    legacy: 'BaseDao.updateOrder()'
+    modern: 'RecordingDao 兼容层，保留批量写入路径'
+    risk: high
+    inspect_rule: ORM-002
+  - id: MAP-004
+    legacy: 'java.util.Date'
+    modern: 'java.time.Instant + ZoneId.of("Asia/Shanghai")'
+    risk: medium
+    inspect_rule: TZ-002
+  - id: MAP-005
+    legacy: 'Struts2 Action'
+    modern: '@RestController'
+    risk: low
+    inspect_rule: null

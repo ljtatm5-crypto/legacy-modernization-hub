@@ -1,0 +1,48 @@
+{
+  "module": "OrderSettleService",
+  "source": "erp-order-core / Java 8 / Struts2 / private ORM",
+  "rules": [
+    {
+      "id": "RULE-014",
+      "text": "返利金额按订单实付金额的 5% 计算，四舍五入保留 2 位小数",
+      "source": "sp_calc_rebate.sql",
+      "confidence": 0.96,
+      "mappedTest": "SO-2026-0884"
+    },
+    {
+      "id": "RULE-021",
+      "text": "结算单创建与库存扣减必须在同一事务边界内",
+      "source": "applicationContext-tx.xml",
+      "confidence": 0.93,
+      "mappedTest": "SO-2026-0882"
+    },
+    {
+      "id": "RULE-027",
+      "text": "支付回调重复到达时按 orderNo 幂等丢弃，settleNo 由 orderNo 派生",
+      "source": "PayCallbackCtrl.java",
+      "confidence": 0.89,
+      "mappedTest": "SO-2026-0881"
+    },
+    {
+      "id": "RULE-033",
+      "text": "跨日订单按 Asia/Shanghai 自然日归属账期",
+      "source": "LegacySettleService.java",
+      "confidence": 0.81,
+      "mappedTest": null
+    },
+    {
+      "id": "RULE-041",
+      "text": "金额字段禁止浮点中间计算，须使用定点数 BigDecimal(18,2)",
+      "source": "规则表 v3",
+      "confidence": 0.98,
+      "mappedTest": "SO-2026-0884"
+    },
+    {
+      "id": "RULE-048",
+      "text": "金额合法性以原始金额判断：0 < amount 即有效，0.001 这类零邻域金额也必须结算成功并返回 0.00，不得先舍入再判定",
+      "source": "LegacySettleService.java:28",
+      "confidence": 0.99,
+      "mappedTest": "boundary_zero_neighborhood"
+    }
+  ]
+}

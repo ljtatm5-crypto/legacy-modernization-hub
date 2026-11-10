@@ -1,0 +1,7 @@
+# 统一行尾，避免 Windows 提交后整个仓库显示改动
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.jar binary
+*.zip binary

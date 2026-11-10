@@ -1,0 +1,15 @@
+# 本地密钥与运行产物，不要提交
+hub/model.json
+hub/runs/
+hub/artifacts/
+hub/sample-project/build/
+hub/engine/ast_scan/build/
+__pycache__/
+*.pyc
+
+# 真实数据集克隆（仅用于跑 dataset 命令，可随时删除）
+_dataset/
+dist/
+
+# 队友交付物与临时比对文件
+_incoming/

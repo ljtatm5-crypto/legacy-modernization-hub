@@ -1,0 +1,72 @@
+# 工作流定义 · 由 hub/engine/workflow.py 解析执行
+# 改这个文件即可调整编排，不用碰 Python 代码。
+version: 1
+name: legacy-modernization
+module: OrderSettleService
+concurrency: 3
+
+nodes:
+  - id: scan-arch
+    skill: /scan-arch
+    title: 架构逆向扫描
+    handler: scan_arch
+    depends_on: []
+
+  - id: extract-rules
+    skill: /extract-rules
+    title: 业务规则抽取
+    handler: extract_rules
+    depends_on: [scan-arch]
+
+  - id: plan-migration
+    skill: /plan-migration
+    title: 迁移计划与风险清单
+    handler: plan_migration
+    depends_on: [extract-rules]
+
+  - id: migrate-module
+    skill: /migrate-module
+    title: 按方法粒度生成
+    handler: migrate_module
+    depends_on: [plan-migration]
+    # 未签核不生成代码
+    requires: approved
+
+  # 与闸门并行：静态质量旁支
+  - id: dependency-audit
+    skill: /audit-deps
+    title: 依赖与 API 兼容审计
+    handler: audit_deps
+    depends_on: [migrate-module]
+    optional: true
+
+  - id: api-surface
+    skill: /api-surface
+    title: 公共 API 面比对
+    handler: api_surface
+    depends_on: [migrate-module]
+
+  - id: equiv-check
+    skill: /equiv-check
+    title: 行为等价性闸门
+    handler: equiv_check
+    depends_on: [migrate-module]
+    # 失败不直接终止：出补丁 → 回到生成节点 → 重跑闸门
+    # 失败回边：先由 auto_repair 判断是结构缺陷（打补丁）还是语义分歧（回灌证据重生成）
+    on_fail:
+      remediate: auto_repair
+      goto: migrate-module
+      max: 2
+
+  - id: gen-regression
+    skill: /gen-regression
+    title: 回归用例生成
+    handler: gen_regression
+    depends_on: [equiv-check]
+    when: "gate == 'pass'"
+
+  - id: report-delta
+    skill: /report-delta
+    title: 差异报告与复盘
+    handler: report_delta
+    depends_on: [gen-regression, dependency-audit, api-surface]
