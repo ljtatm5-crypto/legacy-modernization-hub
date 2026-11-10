@@ -1,0 +1,53 @@
+name: ci
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 版本信息
+        run: |
+          python -V
+          java -version
+          node -v
+
+      - name: 语法检查
+        run: |
+          python -m compileall -q hub/engine hub/mcp-server
+          node --check hub/backend/server.js
+          node --check hub/backend/app.js
+
+      - name: 编译 AST 巡检器
+        run: |
+          mkdir -p hub/engine/ast_scan/build
+          javac -encoding UTF-8 -d hub/engine/ast_scan/build hub/engine/ast_scan/*.java
+
+      - name: 生成适配器自检（无密钥时应回退规则适配器）
+        run: python hub/engine/cli.py probe
+
+      - name: 工作流定义校验
+        run: python hub/engine/cli.py graph | head -40
+
+      - name: MCP 服务自检（9 项）
+        run: python hub/mcp-server/smoke_test.py
